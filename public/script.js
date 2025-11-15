@@ -1,19 +1,23 @@
 let basicAuthToken = '';
 
 /** 登录并存储认证 Token */
+let bearerToken = ''; // 将变量名改为 bearerToken
+
+/** 登录并存储认证 Token */
 function login() {
-    const user = document.getElementById('username').value;
-    const pass = document.getElementById('password').value;
+    // 这里我们只使用密码/Token 字段作为输入
+    const token = document.getElementById('password').value; 
     const loginStatus = document.getElementById('login-status');
     const apiSection = document.getElementById('api-section');
     
-    // 生成 Base64 编码的 Basic 认证头
-    basicAuthToken = btoa(`${user}:${pass}`);
+    // 设置 Bearer Token
+    bearerToken = token; 
     
     fetch('/api/login', {
         method: 'POST',
         headers: {
-            'Authorization': `Basic ${basicAuthToken}`
+            // 发送 Bearer Token
+            'Authorization': `Bearer ${bearerToken}` 
         }
     })
     .then(response => {
@@ -23,7 +27,7 @@ function login() {
             apiSection.style.display = 'block';
             document.getElementById('login-section').style.display = 'none';
         } else {
-            basicAuthToken = ''; // 清除 token
+            bearerToken = ''; // 清除 token
             loginStatus.className = 'error';
             loginStatus.textContent = '登录失败: ' + response.statusText;
             apiSection.style.display = 'none';
@@ -37,7 +41,7 @@ function login() {
 
 /** 通用 API 调用函数 */
 function callApi(path, body, statusElementId) {
-    if (!basicAuthToken) {
+    if (!bearerToken) { // 使用 bearerToken 检查
         document.getElementById(statusElementId).textContent = '请先登录。';
         return;
     }
@@ -49,11 +53,13 @@ function callApi(path, body, statusElementId) {
     fetch(`/api/${path}`, {
         method: 'POST',
         headers: {
-            'Authorization': `Basic ${basicAuthToken}`,
+            // 发送 Bearer Token
+            'Authorization': `Bearer ${bearerToken}`, 
             'Content-Type': 'application/json'
         },
         body: JSON.stringify(body)
     })
+    // ... (后续的 .then/.catch 逻辑保持不变)
     .then(response => response.json().then(data => {
         if (response.ok) {
             statusElement.className = 'success';
@@ -68,6 +74,7 @@ function callApi(path, body, statusElementId) {
         statusElement.textContent = '网络错误: ' + error;
     });
 }
+// ... (其他函数保持不变)
 
 /** 调用 /api/add */
 function addReminder() {
