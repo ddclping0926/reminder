@@ -15,6 +15,7 @@ function createCorsResponse(body, status = 200) {
 }
 
 /** 身份验证 (使用 Basic Auth) */
+// ...
 function authenticate(request, env) {
     const authHeader = request.headers.get('Authorization') || '';
     if (!authHeader.startsWith('Basic ')) return false;
@@ -29,12 +30,16 @@ function authenticate(request, env) {
     
     const [username, password] = creds;
 
-    // 从 Pages 环境变量 (Secrets) 中获取用户名和密码进行比较
-    if (username === env.ADMIN_USERNAME && password === env.ADMIN_PASSWORD) {
+    // *** 关键修改：添加 .trim() 以消除潜在的空格/换行符 ***
+    const requiredUsername = env.ADMIN_USERNAME.trim();
+    const requiredPassword = env.ADMIN_PASSWORD.trim();
+
+    if (username === requiredUsername && password === requiredPassword) {
         return true; 
     }
     return false;
 }
+// ...
 
 // --- 中间件处理函数 ---
 export const onRequest = async (context) => {
