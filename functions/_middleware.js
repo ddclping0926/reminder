@@ -16,29 +16,57 @@ function createCorsResponse(body, status = 200) {
 
 /** 身份验证 (使用 Basic Auth) */
 // ...
+// ... (所有实用函数保持不变)
+
+// *** Bearer Token 认证逻辑 ***
 function authenticate(request, env) {
     const authHeader = request.headers.get('Authorization') || '';
-    if (!authHeader.startsWith('Basic ')) return false;
     
-    const encodedCreds = authHeader.replace('Basic ', '');
-    let creds;
-    try {
-        creds = atob(encodedCreds).split(':');
-    } catch (e) {
-        return false;
-    }
+    // 检查是否以 Bearer 开头
+    if (!authHeader.startsWith('Bearer ')) return false;
     
-    const [username, password] = creds;
+    // 提取客户端发送的 Token
+    const clientToken = authHeader.replace('Bearer ', '').trim();
+    
+    // 提取 Pages Secret 中的正确 Token，并确保 trim()
+    const requiredToken = env.BEARER_TOKEN ? env.BEARER_TOKEN.trim() : '';
 
-    // *** 关键修改：添加 .trim() 以消除潜在的空格/换行符 ***
-    const requiredUsername = env.ADMIN_USERNAME.trim();
-    const requiredPassword = env.ADMIN_PASSWORD.trim();
+    if (!requiredToken) return false;
 
-    if (username === requiredUsername && password === requiredPassword) {
+    // 比较两个 Token
+    if (clientToken === requiredToken) {
         return true; 
     }
     return false;
 }
+
+// ... (onRequest 中间件处理函数保持不变)
+export const onRequest = async (context) => {
+    const { request, env, functionPath } = context;
+
+    // 1. OPTIONS 预检请求
+    if (request.method === 'OPTIONS') {
+        return createCorsResponse('OK', 204); 
+    }
+
+    // 2. 身份认证检查
+    const isLoginPath = functionPath.includes('/login');
+
+    if (isLoginPath) {
+        // 在 Bearer Token 方案中，/login 路径仍然用于测试认证。
+        if (authenticate(request, env)) {
+            return createCorsResponse({ message: "Login Successful" }, 200);
+        }
+        return createCorsResponse({ message: "Unauthorized" }, 401);
+    } else if (functionPath.startsWith('/api')) {
+        // 所有其他 /api/* 路径都需要认证
+        if (!authenticate(request, env)) {
+             return createCorsResponse({ message: "Authentication Required" }, 401);
+        }
+    }
+    
+    return context.next();
+};
 // ...
 
 // --- 中间件处理函数 ---
