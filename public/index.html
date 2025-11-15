@@ -1,1 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>D1 提醒管理</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+        input, button { padding: 10px; margin: 5px 0; display: block; width: 100%; box-sizing: border-box; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>D1 提醒管理</h1>
+    <div id="login-section">
+        <h2>登录 (Basic Auth)</h2>
+        <input type="text" id="username" placeholder="用户名" required>
+        <input type="password" id="password" placeholder="密码" required>
+        <button onclick="login()">登录</button>
+        <p id="login-status"></p>
+    </div>
 
+    <div id="api-section" style="display: none;">
+        <h2>操作界面 (已登录)</h2>
+        
+        <h3>添加提醒 (/api/add)</h3>
+        <input type="text" id="name" placeholder="项目名称 (如: 续签合同)" value="测试项目" required>
+        <input type="text" id="next_due_date" placeholder="下次日期 (YYYY-MM-DD)" value="2025-12-01" required>
+        <input type="text" id="interval_value" placeholder="间隔值 (如: 1)" value="1" required>
+        <select id="interval_type">
+            <option value="month">月</option>
+            <option value="day">日</option>
+        </select>
+        <button onclick="addReminder()">添加提醒</button>
+        <p id="add-status"></p>
+
+        <h3>更新提醒 (/api/update)</h3>
+        <input type="text" id="update_id" placeholder="要更新的 ID" required>
+        <button onclick="updateReminder()">更新日期到今天+周期</button>
+        <p id="update-status"></p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
